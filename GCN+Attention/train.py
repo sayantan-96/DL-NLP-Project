@@ -32,9 +32,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-# 'cora', 'citeseer', 'pubmed'
 flags.DEFINE_string('dataset', dataset, 'Dataset string.')
-# 'gcn', 'gcn_cheby', 'dense'
 flags.DEFINE_string('model', 'gcn', 'Model string.')
 flags.DEFINE_float('learning_rate', 0.02, 'Initial learning rate.')
 flags.DEFINE_integer('epochs', 200, 'Number of epochs to train.')
@@ -61,7 +59,7 @@ features = preprocess_features(features)
 if FLAGS.model == 'gcn':
     support = [preprocess_adj(adj)]
     num_supports = 1
-    model_func = GCN
+    model_func = GAT
 else:
     raise ValueError('Invalid argument for model: ' + str(FLAGS.model))
 
@@ -77,7 +75,6 @@ placeholders = {
 }
 
 # Create model
-#print(features[2][1])
 model = model_func(placeholders, input_dim=features[2][1], logging=True)
 
 # Initialize session

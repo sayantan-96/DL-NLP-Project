@@ -1,6 +1,6 @@
 from inits import *
 import tensorflow.compat.v1 as tf
-
+form getbase.py import attn_head
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
@@ -127,6 +127,51 @@ class Dense(Layer):
 
         return self.act(output)
 
+class GraphAttention(Layer):
+   """Graph attention layer."""   
+   def __init__(self, seq, out_sz, bias_mat, placeholders, activation,sparse_inputs=False, bias, in_drop=0.0, coef_drop=0.0, residual=False):
+        super(GraphAttention, self).__init__(**kwargs)
+
+        if dropout:
+            self.dropout = placeholders['dropout']
+        else:
+            self.dropout = 0.
+
+        self.act = act
+        self.support = placeholders['support']
+        self.sparse_inputs = sparse_inputs
+        self.featureless = featureless
+        self.bias = bias
+
+        # helper variable for sparse dropout
+        self.num_features_nonzero = placeholders['num_features_nonzero']
+
+        with tf.variable_scope(self.name + '_vars'):
+            for i in range(len(self.support)):
+                self.vars['weights_' + str(i)] = glorot([input_dim, output_dim],
+                                                        name='weights_' + str(i))
+            if self.bias:
+                self.vars['bias'] = zeros([output_dim], name='bias')
+
+        if self.logging:
+            self._log_vars()
+
+    def _call(self, inputs):
+        x = inputs
+
+        # dropout
+        if self.sparse_inputs:
+            x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
+        else:
+            x = tf.nn.dropout(x, 1-self.dropout)
+
+        attns = []
+        for _ in range(8):
+            attns.append(attn_head(inputs, bias_mat=bias_mat,
+                out_sz=8, activation=activation,
+                in_drop=ffd_drop, coef_drop=attn_drop, residual=False))
+        h_1 = tf.concat(attns, axis=-1)
+        return h_1
 
 class GraphConvolution(Layer):
     """Graph convolution layer."""
